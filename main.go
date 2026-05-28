@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"example.com/go/handlers"
-	"example.com/go/logger"
+	"example.com/go/backend/handlers"
+	"example.com/go/backend/logger"
 )
 
 func main() {
@@ -22,6 +22,7 @@ func main() {
 	})
 
 	port := os.Getenv("PORT")
+	fmt.Println(port)
 
 	fmt.Printf("Server is running on http://localhost:%s", port)
 	http.ListenAndServe(port, mux)
