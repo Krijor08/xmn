@@ -1,0 +1,12 @@
+module example.com/go
+
+go 1.24.2
+
+require (
+	filippo.io/edwards25519 v1.2.0 // indirect
+	github.com/go-sql-driver/mysql v1.10.0 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/rs/zerolog v1.35.1 // direct
+	golang.org/x/sys v0.29.0 // indirect
+)
