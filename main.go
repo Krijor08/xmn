@@ -2,28 +2,38 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
 	"example.com/go/backend/handlers"
-	"example.com/go/backend/logger"
+	"example.com/go/backend/middleware"
+
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	godotenv.Load()
+
+	r := mux.NewRouter()
 
 	homeHandler := http.HandlerFunc(handlers.Home)
-	wrappedHome := logger.Logger(homeHandler)
+	aboutHandler := http.HandlerFunc(handlers.About)
 
-	mux.Handle("GET /", wrappedHome)
+	r.HandleFunc("/", homeHandler.ServeHTTP).Methods("GET")
+	r.HandleFunc("/about", aboutHandler.ServeHTTP).Methods("GET")
 
-	mux.HandleFunc("GET /api/hello", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Hello, World!")
-	})
+	r.PathPrefix("/static/").Handler(
+		http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
+	)
 
 	port := os.Getenv("PORT")
-	fmt.Println(port)
+	address := fmt.Sprintf("localhost:%s", port)
 
-	fmt.Printf("Server is running on http://localhost:%s", port)
-	http.ListenAndServe(port, mux)
+	fmt.Println(address)
+
+	r.Use(middleware.Logger)
+	fmt.Printf("Server is running on %s\n", address)
+	log.Fatal(http.ListenAndServe(address, r))
 }
