@@ -1,14 +1,12 @@
 package handlers
 
 import (
+	"html/template"
 	"net/http"
-
-	"example.com/go/backend/middleware"
 )
 
+var aboutTemplate = template.Must(template.ParseFiles("templates/about.html"))
+
 func About(w http.ResponseWriter, r *http.Request) {
-	respondJSON(w, http.StatusOK, middleware.ApiResponse{
-		Message: "This is the about page",
-		Status:  "success",
-	})
+	aboutTemplate.Execute(w, nil)
 }

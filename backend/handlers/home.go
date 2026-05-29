@@ -2,16 +2,16 @@ package handlers
 
 import (
 	"encoding/json"
+	"html/template"
 	"net/http"
 
 	. "example.com/go/backend/middleware"
 )
 
+var homeTemplate = template.Must(template.ParseFiles("templates/index.html"))
+
 func Home(w http.ResponseWriter, r *http.Request) {
-	respondJSON(w, http.StatusOK, ApiResponse{
-		Message: "Welcome to the home page",
-		Status:  "success",
-	})
+	homeTemplate.Execute(w, nil)
 }
 
 func respondJSON(w http.ResponseWriter, status int, payload ApiResponse) {
