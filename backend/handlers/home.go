@@ -1,21 +1,23 @@
 package handlers
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"html/template"
 	"net/http"
-
-	. "example.com/go/backend/middleware"
+	// . "example.com/go/backend/middleware"
 )
 
-var homeTemplate = template.Must(template.ParseFiles("templates/index.html"))
+var templates = template.Must(
+	template.ParseGlob("templates/*.html"),
+)
 
 func Home(w http.ResponseWriter, r *http.Request) {
-	homeTemplate.Execute(w, nil)
+	templates.ExecuteTemplate(w, "base.html", nil)
+
 }
 
-func respondJSON(w http.ResponseWriter, status int, payload ApiResponse) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(payload)
-}
+// func respondJSON(w http.ResponseWriter, status int, payload ApiResponse) {
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(status)
+// 	json.NewEncoder(w).Encode(payload)
+// }
