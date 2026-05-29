@@ -28,8 +28,7 @@ func main() {
 		http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
 	)
 
-	port := os.Getenv("PORT")
-	address := fmt.Sprintf("localhost:%s", port)
+	address := os.Getenv("ADDRESS")
 
 	fmt.Println(address)
 
