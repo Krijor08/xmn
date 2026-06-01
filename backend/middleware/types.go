@@ -12,3 +12,19 @@ type ErrorResponse struct {
 	Message string         `json:"message"`
 	Details map[string]any `json:"details,omitempty"`
 }
+
+type User struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Role  string `json:"role"`
+	Email string `json:"email"`
+}
+
+type BasePage struct {
+	CurrentPage string
+}
+
+type HomeData struct {
+	BasePage
+	Users []User
+}

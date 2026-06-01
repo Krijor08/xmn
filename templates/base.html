@@ -3,13 +3,13 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>{{ block "title" . }}This thing{{ end }}</title>
+	<title>{{ block "title" . }}{{ end }}</title>
 	<link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 	<nav>
-		<a href="/">Home</a> |
-		<a href="/about">About</a>
+		<a href="/" class="{{ if eq .CurrentPage "home" }}active{{ end }}">Home</a> |
+		<a href="/about" class="{{ if eq .CurrentPage "about" }}active{{ end }}">About</a>
 	</nav>
 	
 	<main>

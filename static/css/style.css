@@ -3,3 +3,8 @@ h1 {
 	margin-bottom: 0.5em;
 	color: #bb1313;
 }
+
+.active {
+	font-weight: bold;
+	color: #bb1313;
+}

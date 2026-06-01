@@ -1,0 +1,12 @@
+DELIMITER $$
+
+CREATE TRIGGER roles_dtrig
+BEFORE DELETE 
+ON roles FOR EACH ROW 
+BEGIN
+	UPDATE test AS t
+    SET t.role_ID = 1
+    WHERE t.role_ID = OLD.ID;
+END $$
+
+DELIMITER ;
