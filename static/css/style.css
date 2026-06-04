@@ -1,0 +1,10 @@
+h1 {
+	font-size: 2em;
+	margin-bottom: 0.5em;
+	color: #bb1313;
+}
+
+.active {
+	font-weight: bold;
+	color: #bb1313;
+}
