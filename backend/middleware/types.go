@@ -14,10 +14,10 @@ type ErrorResponse struct {
 }
 
 type User struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Role  string `json:"role"`
-	Email string `json:"email"`
+	ID    int
+	Name  string
+	Role  string
+	Email string
 }
 
 type BasePage struct {
@@ -26,5 +26,5 @@ type BasePage struct {
 
 type HomeData struct {
 	BasePage
-	Users []User
+	User User
 }

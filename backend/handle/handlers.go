@@ -1,28 +1,40 @@
 package handle
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
 	. "example.com/go/backend/middleware"
 )
 
-var templates = template.Must(
-	template.ParseGlob("templates/*.html"),
-)
+var tmpl = make(map[string]*template.Template)
 
 func Home(w http.ResponseWriter, r *http.Request) {
+	tmpl["home.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/home.html"))
+
 	data := HomeData{
 		BasePage: BasePage{CurrentPage: "home"},
-		Users:    []User{{ID: 1, Name: "placeholder", Role: "admin", Email: "placeholder@example.com"}},
+		User:     User{ID: 1, Name: "placeholder", Role: "admin", Email: "placeholder@example.com"},
 	}
 
-	templates.ExecuteTemplate(w, "home.html", data)
-
+	err := tmpl["home.html"].Execute(w, data)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		fmt.Printf("Error executing home: %v\n", err)
+	}
 }
 
 func About(w http.ResponseWriter, r *http.Request) {
+	tmpl["about.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/about.html"))
+
 	data := BasePage{CurrentPage: "about"}
 
-	templates.ExecuteTemplate(w, "about.html", data)
+	fmt.Printf("About page accessed {%s}\n", data)
+
+	err := tmpl["about.html"].Execute(w, data)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		fmt.Printf("Error executing about: %v\n", err)
+	}
 }
