@@ -15,7 +15,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	data := HomeData{
 		BasePage: BasePage{CurrentPage: "home"},
-		User:     User{ID: 1, Name: "placeholder", Role: "admin", Email: "placeholder@example.com"},
+		User:     User{ID: 1, Name: "Username", Role: "placeholder", Email: "placeholder@example.com"},
 	}
 
 	err := tmpl["home.html"].Execute(w, data)
@@ -28,7 +28,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 func About(w http.ResponseWriter, r *http.Request) {
 	tmpl["about.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/about.html"))
 
-	data := BasePage{CurrentPage: "about"}
+	data := AboutData{BasePage: BasePage{CurrentPage: "about"}, Version: "0.0.1"}
 
 	fmt.Printf("About page accessed {%s}\n", data)
 

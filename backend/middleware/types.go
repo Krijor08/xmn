@@ -28,3 +28,8 @@ type HomeData struct {
 	BasePage
 	User User
 }
+
+type AboutData struct {
+	BasePage
+	Version string
+}
