@@ -7,10 +7,12 @@
 	<link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-	<nav>
-		<a href="/" class="{{ if eq .CurrentPage "home" }}active{{ end }}">Home</a> |
-		<a href="/about" class="{{ if eq .CurrentPage "about" }}active{{ end }}">About</a>
-	</nav>
+	<div class="banner">
+		<nav>
+			<a href="/" class="{{ if eq .CurrentPage "home" }}active{{ end }}">Home</a> |
+			<a href="/about" class="{{ if eq .CurrentPage "about" }}active{{ end }}">About</a>
+		</nav>
+	</div>
 	
 	<main>
 		{{ template "content" . }}
