@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"example.com/go/backend/database"
 	. "example.com/go/backend/middleware"
 )
 
@@ -30,11 +31,52 @@ func About(w http.ResponseWriter, r *http.Request) {
 
 	data := AboutData{BasePage: BasePage{CurrentPage: "about"}, Version: "0.0.1"}
 
-	fmt.Printf("About page accessed {%s}\n", data)
-
 	err := tmpl["about.html"].Execute(w, data)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		fmt.Printf("Error executing about: %v\n", err)
 	}
+}
+
+func LoginPage(w http.ResponseWriter, r *http.Request) {
+	tmpl["login.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/login.html"))
+
+	data := LoginData{BasePage: BasePage{CurrentPage: "login"}}
+
+	err := tmpl["login.html"].Execute(w, data)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		fmt.Printf("Error executing login: %v\n", err)
+	}
+
+}
+
+func Login(w http.ResponseWriter, r *http.Request) {
+	database.InitMySQL()
+
+	r.ParseForm()
+
+	loginReq := LoginRequest{
+		Username: r.FormValue("username"),
+		Password: r.FormValue("password"),
+	}
+
+	fmt.Printf("Received login attempt for username: %s\n", loginReq.Username)
+
+	isAuthenticated, err := database.AuthenticateUser(loginReq.Username, loginReq.Password)
+
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		fmt.Printf("Error occurred while authenticating user: %s\n", err.Error())
+		return
+	}
+
+	if isAuthenticated {
+		fmt.Printf("User %s authenticated successfully!\n", loginReq.Username)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	} else {
+		fmt.Printf("Authentication failed for user %s\n", loginReq.Username)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	}
+
 }

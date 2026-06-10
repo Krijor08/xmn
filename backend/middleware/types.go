@@ -20,6 +20,15 @@ type User struct {
 	Email string
 }
 
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
+}
+
 type BasePage struct {
 	CurrentPage string
 }
@@ -32,4 +41,8 @@ type HomeData struct {
 type AboutData struct {
 	BasePage
 	Version string
+}
+
+type LoginData struct {
+	BasePage
 }

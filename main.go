@@ -14,16 +14,20 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	godotenv.Load() // Support for .env file
 
 	r := mux.NewRouter()
 
 	r.HandleFunc("/about", handle.About).Methods("GET")
+	r.HandleFunc("/login", handle.LoginPage)
+
 	r.HandleFunc("/", handle.Home).Methods("GET")
 
 	r.PathPrefix("/static/").Handler(
 		http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
 	)
+
+	r.HandleFunc("/api/login", handle.Login).Methods("POST")
 
 	address := os.Getenv("ADDRESS")
 

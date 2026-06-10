@@ -1,0 +1,17 @@
+{{ template "base.html" . }}
+
+{{ define "title" }}Login{{ end }}
+
+{{ define "content" }}
+	<h1>Login page</h1>
+	<p>Here you can login to the application. <br><br>
+	<form action="/api/login" method="POST" class="login-form">
+		<label for="username">Username:</label><br>
+		<input type="text" id="username" name="username"><br>
+		
+		<label for="password">Password:</label><br>
+		<input type="password" id="password" name="password"><br><br>
+		
+		<button class="btn-login">Submit</button>
+	</form>
+{{ end }}
