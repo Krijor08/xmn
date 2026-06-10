@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{{ block "title" . }}{{ end }}</title>
 	<link rel="stylesheet" href="/static/css/style.css">
+	<link rel="icon" href="/static/img/favicon.ico">
 </head>
 <body>
 	<div class="banner">
@@ -14,11 +15,9 @@
 			<a href="/login" class="{{ if eq .CurrentPage "login" }}active{{ end }}">Login</a>
 		</nav>
 	</div>
-	
 	<main>
 		{{ template "content" . }}
 	</main>
-
 	<footer>
 		<p>&copy; 2026 This thing</p>
 	</footer>

@@ -1,4 +1,4 @@
-package middleware
+package models
 
 type ApiResponse struct {
 	Data    any            `json:"data,omitempty"`
@@ -18,6 +18,7 @@ type User struct {
 	Name  string
 	Role  string
 	Email string
+	Phone string
 }
 
 type LoginRequest struct {

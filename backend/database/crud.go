@@ -3,22 +3,23 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 
-	. "example.com/go/backend/middleware"
+	"example.com/go/backend/models"
 )
 
-func GetUserByUsername(username string) (*User, error) {
-	var user User
-	err := DB.QueryRow("SELECT id, name, role, email FROM users WHERE name = ?", username).Scan(&user.ID, &user.Name, &user.Role, &user.Email)
+func GetUserByUsername(username string, db *sql.DB) (*models.User, error) {
+	var user models.User
+	err := db.QueryRow("SELECT id, name, role, email, phone FROM user_view WHERE name = ?", username).Scan(&user.ID, &user.Name, &user.Role, &user.Email, &user.Phone)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // No user found
 		}
-		return nil, fmt.Errorf("error occurred while fetching user: %w", err)
+		return nil, err
 	}
 	return &user, nil
 }
@@ -28,12 +29,13 @@ func verifyPassword(providedPassword, storedHash string) error {
 	return err
 }
 
-func AuthenticateUser(username, password string) (bool, error) {
-	user, err := GetUserByUsername(username)
+func AuthenticateUser(username string, password string, db *sql.DB) (bool, error) {
+	user, err := GetUserByUsername(username, db)
 	if err != nil {
 		log.Warn().Msgf("Error occurred while fetching user: %s", err)
-		// log.Warn("Error occurred while fetching user: %w", err) // This is the correct way to log the error with zerolog
-		return false, fmt.Errorf("error occurred while authenticating user: %w", err)
+
+		http.Redirect(nil, nil, "/error", http.StatusNotImplemented)
+		return false, err
 	}
 	if user == nil {
 		return false, nil // User not found
@@ -41,7 +43,7 @@ func AuthenticateUser(username, password string) (bool, error) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return false, fmt.Errorf("error occurred while hashing password: %w", err)
+		return false, fmt.Errorf("Error occurred while hashing password: %w", err)
 	}
 	fmt.Printf("Hashed password for debugging: %s\n", string(hashedPassword))
 
