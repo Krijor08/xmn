@@ -13,15 +13,23 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Load .env when not in docker container
+func init() {
+	if os.Getenv("DOCKER_ENV") != "true" {
+		_ = godotenv.Load()
+	}
+}
+
 func main() {
-	godotenv.Load() // Support for .env file
 	db := database.InitMySQL()
+	defer db.Close()
 
 	r := mux.NewRouter()
 	handle := middleware.NewHandler(db)
 
 	r.HandleFunc("/about", handle.About).Methods("GET")
-	r.HandleFunc("/login", handle.LoginPage)
+	r.HandleFunc("/login", handle.LoginPage).Methods("GET")
+	r.HandleFunc("/signup", handle.SignupPage).Methods("GET")
 
 	r.HandleFunc("/", handle.Home).Methods("GET")
 

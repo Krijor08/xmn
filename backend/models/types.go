@@ -21,6 +21,11 @@ type User struct {
 	Phone string
 }
 
+type Role struct {
+	ID   int
+	Role string
+}
+
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -28,6 +33,14 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	Token string `json:"token"`
+}
+
+type SignupRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	Phone    int    `json:"phone"`
+	Role_ID  int    `json:"role_id"`
 }
 
 type BasePage struct {

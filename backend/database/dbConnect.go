@@ -8,15 +8,8 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 )
-
-func init() {
-	if os.Getenv("DOCKER_ENV") != "true" {
-		_ = godotenv.Load()
-	}
-}
 
 func getDSN() string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
@@ -38,19 +31,18 @@ func InitMySQL() *sql.DB {
 		log.Warn().Msg("Failed to open MySQL connection: " + err.Error())
 		return nil
 	}
-	defer dbHandle.Close()
 
 	if err := dbHandle.Ping(); err != nil {
 		log.Warn().Msg("Can't reach MySQL: " + err.Error())
+		return nil
 	}
 
-	// Critical production settings
 	dbHandle.SetMaxOpenConns(25)
 	dbHandle.SetMaxIdleConns(25)
 	dbHandle.SetConnMaxLifetime(5 * time.Minute)
 	dbHandle.SetConnMaxIdleTime(10 * time.Minute)
 
-	// Retry connection
+	// Test connection
 	for i := range 10 {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		if err = dbHandle.PingContext(ctx); err == nil {

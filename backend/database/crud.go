@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/rs/zerolog/log"
@@ -12,9 +11,9 @@ import (
 	"example.com/go/backend/models"
 )
 
-func GetUserByUsername(username string, db *sql.DB) (*models.User, error) {
-	var user models.User
-	err := db.QueryRow("SELECT id, name, role, email, phone FROM user_view WHERE name = ?", username).Scan(&user.ID, &user.Name, &user.Role, &user.Email, &user.Phone)
+func GetUserByUsername(username string, db *sql.DB) (*models.LoginRequest, error) {
+	var user models.LoginRequest
+	err := db.QueryRow("SELECT username, password FROM user_view WHERE username = ?", username).Scan(&user.Username, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // No user found
@@ -24,17 +23,22 @@ func GetUserByUsername(username string, db *sql.DB) (*models.User, error) {
 	return &user, nil
 }
 
-func verifyPassword(providedPassword, storedHash string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(providedPassword))
-	return err
+func GetRoleId(roleName string, db *sql.DB) (int, error) {
+	var role models.Role
+	err := db.QueryRow("SELECT ID, role FROM roles WHERE role = ?", roleName).Scan(&role.ID, &role.Role)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return role.ID, nil
 }
 
 func AuthenticateUser(username string, password string, db *sql.DB) (bool, error) {
 	user, err := GetUserByUsername(username, db)
 	if err != nil {
 		log.Warn().Msgf("Error occurred while fetching user: %s", err)
-
-		http.Redirect(nil, nil, "/error", http.StatusNotImplemented)
 		return false, err
 	}
 	if user == nil {
@@ -47,5 +51,9 @@ func AuthenticateUser(username string, password string, db *sql.DB) (bool, error
 	}
 	fmt.Printf("Hashed password for debugging: %s\n", string(hashedPassword))
 
-	return verifyPassword(password, string(hashedPassword)) == nil, nil
+	return bcrypt.CompareHashAndPassword(hashedPassword, []byte(password)) == nil, nil
+}
+
+func CreateUser(SignupReq models.SignupRequest, db *sql.DB) {
+
 }

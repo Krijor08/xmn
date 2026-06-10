@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 
 	"example.com/go/backend/database"
 	"example.com/go/backend/models"
 )
 
 var tmpl = make(map[string]*template.Template)
+
+var isAuthenticated bool = false
 
 type Handler struct {
 	db *sql.DB
@@ -21,6 +24,10 @@ func NewHandler(db *sql.DB) *Handler {
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
+	if !isAuthenticated {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	}
+
 	tmpl["home.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/home.html"))
 
 	data := models.HomeData{
@@ -61,6 +68,7 @@ func (h *Handler) LoginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+	defer http.Redirect(w, r, "/login", http.StatusSeeOther)
 	r.ParseForm()
 
 	loginReq := models.LoginRequest{
@@ -70,7 +78,8 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Received login attempt for username: %s\n", loginReq.Username)
 
-	isAuthenticated, err := database.AuthenticateUser(loginReq.Username, loginReq.Password, h.db)
+	var err error
+	isAuthenticated, err = database.AuthenticateUser(loginReq.Username, loginReq.Password, h.db)
 
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -79,11 +88,31 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isAuthenticated {
-		fmt.Printf("User %s authenticated successfully!\n", loginReq.Username)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Error(w, fmt.Sprintf("User %s authenticated successfully!", loginReq.Username), http.StatusOK)
 	} else {
-		fmt.Printf("Authentication failed for user %s\n", loginReq.Username)
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Error(w, fmt.Sprintf("Authentication failed for user %s", loginReq.Username), http.StatusUnauthorized)
+	}
+}
+
+func (h *Handler) SignupPage(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	phone, err := strconv.Atoi(r.FormValue("phone"))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("%v is not a valid phone number", r.FormValue("phone")), http.StatusBadRequest)
 	}
 
+	role_id, err := database.GetRoleId(r.FormValue("role"), h.db)
+
+	signupReq := models.SignupRequest{
+		Username: r.FormValue("username"),
+		Password: r.FormValue("password"),
+		Role_ID:  role_id,
+		Email:    r.FormValue("email"),
+		Phone:    phone,
+	}
+
+	database.CreateUser(signupReq, h.db)
 }
