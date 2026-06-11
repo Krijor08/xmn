@@ -29,6 +29,7 @@ func main() {
 	} else {
 		sql = false
 	}
+
 	defer db.Close()
 
 	r := mux.NewRouter()
@@ -42,10 +43,15 @@ func main() {
 		http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
 	)
 
-	if sql == true {
+	if sql {
 		r.HandleFunc("/login", handle.LoginPage).Methods("GET")
 		r.HandleFunc("/signup", handle.SignupPage).Methods("GET")
+
 		r.HandleFunc("/api/login", handle.Login).Methods("POST")
+		r.HandleFunc("/api/signup", handle.Signup).Methods("POST")
+	} else {
+		r.HandleFunc("/login", handle.NoSQL).Methods("GET")
+		r.HandleFunc("/signup", handle.NoSQL).Methods("GET")
 	}
 
 	address := os.Getenv("ADDRESS")

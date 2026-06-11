@@ -1,0 +1,26 @@
+{{ template "base.html" . }}
+
+{{ define "title" }}Sign up{{ end }}
+
+{{ define "content" }}
+	<h1>Sign up page</h1>
+	<p>Here you can sign up to the application. <br><br>
+	<form action="/api/signup" method="POST" class="signup-form">
+		<label for="username">Username:</label><br>
+		<input type="text" id="username" name="username"><br>
+		
+		<label for="password">Password:</label><br>
+		<input type="password" id="password" name="password"><br>
+
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email"><br>
+
+        <label for="phone">Phone:</label><br>
+        <input type="number" id="phone" name="phone"><br>
+
+        <label for="confirm">Confirm password:</label><br>
+        <input type="password" id="confirm" name="confirm"><br>
+		
+		<button class="btn-login">Submit</button>
+	</form>
+{{ end }}

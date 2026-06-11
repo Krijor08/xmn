@@ -9,6 +9,7 @@ import (
 
 	"example.com/go/backend/database"
 	"example.com/go/backend/models"
+	"github.com/rs/zerolog/log"
 )
 
 var tmpl = make(map[string]*template.Template)
@@ -23,14 +24,14 @@ func NewHandler(db *sql.DB) *Handler {
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
-	// if !isAuthenticated {
-	// 	http.Redirect(w, r, "/login", http.StatusSeeOther)
-	// }
+	if !isAuthenticated {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	}
 
 	tmpl["home.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/home.html"))
 
 	data := models.HomeData{
-		BasePage: models.BasePage{CurrentPage: "home" /*, IsAuthenticated: isAuthenticated*/},
+		BasePage: models.BasePage{CurrentPage: "home", IsAuthenticated: isAuthenticated},
 		User:     models.HomeUser{ID: 1, Name: "Username", Role: "placeholder", Email: "placeholder@example.com"},
 	}
 
@@ -42,6 +43,10 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) About(w http.ResponseWriter, r *http.Request) {
+	if !isAuthenticated {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	}
+
 	tmpl["about.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/about.html"))
 
 	data := models.AboutData{BasePage: models.BasePage{CurrentPage: "about"}, Version: "0.0.1"}
@@ -85,10 +90,10 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if User.Name == "" {
+	if User.Name != "" {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		http.Error(w, fmt.Sprintf("User %s authenticated successfully!", loginReq.Username), http.StatusOK)
-		token, err := generateToken(User.ID, User.Email)
+		isAuthenticated = true
 	} else {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		http.Error(w, fmt.Sprintf("Authentication failed for user %s", loginReq.Username), http.StatusUnauthorized)
@@ -96,6 +101,26 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SignupPage(w http.ResponseWriter, r *http.Request) {
+	tmpl["signup.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/signup.html"))
+
+	data := models.SignupData{
+		BasePage: models.BasePage{CurrentPage: "signup"},
+		Roles: []models.Roles{
+			{ID: "a", Role: "Guest"},
+			{ID: "b", Role: "User"},
+			{ID: "c", Role: "Tester"},
+			{ID: "c", Role: "Something else"},
+		},
+	}
+
+	err := tmpl["signup.html"].Execute(w, data)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		fmt.Printf("Error executing signup: %v\n", err)
+	}
+}
+
+func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	phone, err := strconv.Atoi(r.FormValue("phone"))
@@ -103,15 +128,28 @@ func (h *Handler) SignupPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("%v is not a valid phone number", r.FormValue("phone")), http.StatusBadRequest)
 	}
 
-	role_id, err := database.GetRoleId(r.FormValue("role"), h.db)
-
 	signupReq := models.SignupRequest{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
 		Email:    r.FormValue("email"),
-		Role_ID:  role_id,
 		Phone:    phone,
 	}
 
-	database.CreateUser(signupReq, h.db)
+	result, err := database.CreateUser(signupReq, h.db)
+	if err != nil {
+		log.Warn().Msg(fmt.Sprintf("Could not insert data: %s", err))
+	}
+	lastId, err := result.LastInsertId()
+	rows, err := result.RowsAffected()
+	log.Debug().Msg(fmt.Sprintf("%v, %v", lastId, rows))
+}
+
+func (h *Handler) NoSQL(w http.ResponseWriter, r *http.Request) {
+	tmpl["login.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/nosql.html"))
+
+	err := tmpl["nosql.html"].Execute(w, "base.html")
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		fmt.Printf("Error executing NoSQL: %v\n", err)
+	}
 }
