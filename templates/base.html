@@ -5,20 +5,20 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{{ block "title" . }}{{ end }}</title>
 	<link rel="stylesheet" href="/static/css/style.css">
+	<link rel="icon" href="/static/img/favicon.ico">
 </head>
 <body>
 	<div class="banner">
 		<nav>
-			<a href="/" class="{{ if eq .CurrentPage "home" }}active{{ end }}">Home</a> |
-			<a href="/about" class="{{ if eq .CurrentPage "about" }}active{{ end }}">About</a> |
-			<a href="/login" class="{{ if eq .CurrentPage "login" }}active{{ end }}">Login</a>
+			{{ if eq .IsAuthenticated true }}<a href="/" class="{{ if eq .CurrentPage "home" }}active{{ end }}">Home</a> |{{ end }}
+			{{ if eq .IsAuthenticated true }}<a href="/about" class="{{ if eq .CurrentPage "about" }}active{{ end }}">About</a>{{ end }}
+			{{ if eq .IsAuthenticated false }}<a href="/login" class="{{ if eq .CurrentPage "login" }}active{{ end }}">Login</a> |{{ end }}
+			{{ if eq .IsAuthenticated false }}<a href="/signup" class="{{ if eq .CurrentPage "signup" }}active{{ end }}">Sign up</a>{{ end }}
 		</nav>
 	</div>
-	
 	<main>
 		{{ template "content" . }}
 	</main>
-
 	<footer>
 		<p>&copy; 2026 This thing</p>
 	</footer>

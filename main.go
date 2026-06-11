@@ -6,20 +6,36 @@ import (
 	"net/http"
 	"os"
 
-	"example.com/go/backend/handle"
-	. "example.com/go/backend/middleware"
+	"example.com/go/backend/database"
+	"example.com/go/backend/middleware"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
 
+// Load .env when not in docker container
+func init() {
+	if os.Getenv("DOCKER_ENV") != "true" {
+		_ = godotenv.Load()
+	}
+}
+
+var sql bool
+
 func main() {
-	godotenv.Load() // Support for .env file
+	db, err := database.InitMySQL()
+	if err == nil {
+		sql = true
+	} else {
+		sql = false
+	}
+
+	defer db.Close()
 
 	r := mux.NewRouter()
+	handle := middleware.NewHandler(db)
 
 	r.HandleFunc("/about", handle.About).Methods("GET")
-	r.HandleFunc("/login", handle.LoginPage)
 
 	r.HandleFunc("/", handle.Home).Methods("GET")
 
@@ -27,11 +43,20 @@ func main() {
 		http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
 	)
 
-	r.HandleFunc("/api/login", handle.Login).Methods("POST")
+	if sql {
+		r.HandleFunc("/login", handle.LoginPage).Methods("GET")
+		r.HandleFunc("/signup", handle.SignupPage).Methods("GET")
+
+		r.HandleFunc("/api/login", handle.Login).Methods("POST")
+		r.HandleFunc("/api/signup", handle.Signup).Methods("POST")
+	} else {
+		r.HandleFunc("/login", handle.NoSQL).Methods("GET")
+		r.HandleFunc("/signup", handle.NoSQL).Methods("GET")
+	}
 
 	address := os.Getenv("ADDRESS")
 
-	r.Use(Logger)
+	r.Use(middleware.Logger)
 	fmt.Printf("Server is running on %s\n", address)
 	log.Fatal(http.ListenAndServe(address, r))
 }

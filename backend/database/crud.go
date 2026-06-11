@@ -8,42 +8,59 @@ import (
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 
-	. "example.com/go/backend/middleware"
+	"example.com/go/backend/models"
 )
 
-func GetUserByUsername(username string) (*User, error) {
-	var user User
-	err := DB.QueryRow("SELECT id, name, role, email FROM users WHERE name = ?", username).Scan(&user.ID, &user.Name, &user.Role, &user.Email)
+func GetUserByUsername(username string, db *sql.DB) (models.User, error) {
+	var user models.User
+	err := db.QueryRow("SELECT ID, username, password, COALESCE(email, ''), COALESCE(phone, 0), role FROM user_view WHERE username = ?", username).Scan(&user.ID, &user.Name, &user.Password, &user.Email, &user.Phone, &user.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // No user found
+			return models.User{}, nil // No user found
 		}
-		return nil, fmt.Errorf("error occurred while fetching user: %w", err)
+		return models.User{}, err
 	}
-	return &user, nil
+	return user, nil
 }
 
-func verifyPassword(providedPassword, storedHash string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(providedPassword))
-	return err
-}
-
-func AuthenticateUser(username, password string) (bool, error) {
-	user, err := GetUserByUsername(username)
+func AuthenticateUser(username string, password string, db *sql.DB) (models.User, error) {
+	user, err := GetUserByUsername(username, db)
 	if err != nil {
 		log.Warn().Msgf("Error occurred while fetching user: %s", err)
-		// log.Warn("Error occurred while fetching user: %w", err) // This is the correct way to log the error with zerolog
-		return false, fmt.Errorf("error occurred while authenticating user: %w", err)
+		return models.User{Name: ""}, err
 	}
-	if user == nil {
-		return false, nil // User not found
+	if user.Name == "" {
+		return models.User{Name: ""}, nil // User not found
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return false, fmt.Errorf("error occurred while hashing password: %w", err)
+		return models.User{Name: ""}, fmt.Errorf("Error occurred while hashing password: %w", err)
 	}
 	fmt.Printf("Hashed password for debugging: %s\n", string(hashedPassword))
 
-	return verifyPassword(password, string(hashedPassword)) == nil, nil
+	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+	if err != nil {
+		return models.User{Name: ""}, err
+	}
+
+	return user, nil
+}
+
+func CreateUser(SignupReq models.SignupRequest, db *sql.DB) (sql.Result, error) {
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(SignupReq.Password), bcrypt.DefaultCost)
+	var result sql.Result
+	if SignupReq.Phone != 0 {
+		result, err = db.Exec(
+			"INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?);",
+			SignupReq.Username, hashedPassword, SignupReq.Email, SignupReq.Phone,
+		)
+	} else {
+		result, err = db.Exec(
+			"INSERT INTO users (username, password, email) VALUES (?, ?, ?);",
+			SignupReq.Username, hashedPassword, SignupReq.Email,
+		)
+	}
+	return result, err
 }

@@ -1,0 +1,79 @@
+body {
+	justify-content: center;
+	font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+	background-color: #eee;
+	color: #333;
+	max-width: 800px;
+	padding: 10%;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	border-radius: 8px;
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	padding-top: 30px;
+	padding-bottom: 60px
+}
+
+main {
+	flex: 1;
+}
+
+footer {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 60px;
+	background-color: #d3d3d3;
+	color: #777;
+	text-align: center;
+}
+
+h1 {
+	font-size: 2em;
+	margin-bottom: 0.5em;
+	color: #bb1313;
+}
+
+a {
+	color: #bb1313;
+	text-decoration: none;
+}
+
+nav {
+	justify-content: center;
+	position: fixed;
+	display: flex;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 30px;
+	background-color: #d3d3d3;
+	margin-bottom: 10px;
+}
+
+
+.active {
+	font-weight: bold;
+	color: #bb1313;
+}
+
+.btn-login {
+	background-color: #bb1313;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 16px;
+	font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+	margin-top: 10px;
+	cursor: pointer;
+	border-radius: 4px;
+}
+
+.roles-dropdown {
+	margin-top: 15px;
+	padding: 2px;
+}

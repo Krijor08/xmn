@@ -1,4 +1,4 @@
-package middleware
+package models
 
 type ApiResponse struct {
 	Data    any            `json:"data,omitempty"`
@@ -13,11 +13,26 @@ type ErrorResponse struct {
 	Details map[string]any `json:"details,omitempty"`
 }
 
-type User struct {
+type HomeUser struct {
 	ID    int
 	Name  string
 	Role  string
 	Email string
+	Phone int
+}
+
+type User struct {
+	ID       int
+	Name     string
+	Role     string
+	Email    string
+	Phone    int
+	Password string
+}
+
+type Roles struct {
+	ID   string
+	Role string
 }
 
 type LoginRequest struct {
@@ -29,13 +44,21 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
+type SignupRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	Phone    int    `json:"phone"`
+}
+
 type BasePage struct {
-	CurrentPage string
+	CurrentPage     string
+	IsAuthenticated bool
 }
 
 type HomeData struct {
 	BasePage
-	User User
+	User HomeUser
 }
 
 type AboutData struct {
@@ -45,4 +68,9 @@ type AboutData struct {
 
 type LoginData struct {
 	BasePage
+}
+
+type SignupData struct {
+	BasePage
+	Roles []Roles
 }

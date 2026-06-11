@@ -8,53 +8,47 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 )
 
-func init() {
-	if os.Getenv("DOCKER_ENV") != "true" {
-		_ = godotenv.Load()
-	}
-}
-
 func getDSN() string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local&timeout=%s",
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
 		os.Getenv("MYSQL_USER"),
 		os.Getenv("MYSQL_PASSWORD"),
 		os.Getenv("MYSQL_HOST"),
 		os.Getenv("MYSQL_PORT"),
 		os.Getenv("MYSQL_DATABASE"),
-		os.Getenv("MYSQL_TIMEOUT"),
 	)
 }
 
-var DB *sql.DB
-
-func InitMySQL() {
+func InitMySQL() (*sql.DB, error) {
 	dsn := getDSN()
 
 	fmt.Printf("Attempting MySQL connection with DSN: %s\n", dsn)
 
-	var err error
-	DB, err = sql.Open("mysql", dsn)
+	dbHandle, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Warn().Msg("Failed to open MySQL connection: " + err.Error())
+		return nil, err
 	}
 
-	// Critical production settings
-	DB.SetMaxOpenConns(25)
-	DB.SetMaxIdleConns(25)
-	DB.SetConnMaxLifetime(5 * time.Minute)
-	DB.SetConnMaxIdleTime(10 * time.Minute)
+	if err := dbHandle.Ping(); err != nil {
+		log.Warn().Msg("Can't reach MySQL: " + err.Error())
+		return nil, err
+	}
 
-	// Retry connection
+	dbHandle.SetMaxOpenConns(25)
+	dbHandle.SetMaxIdleConns(25)
+	dbHandle.SetConnMaxLifetime(5 * time.Minute)
+	dbHandle.SetConnMaxIdleTime(10 * time.Minute)
+
+	// Test connection
 	for i := range 10 {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		if err = DB.PingContext(ctx); err == nil {
+		if err = dbHandle.PingContext(ctx); err == nil {
 			cancel()
 			log.Info().Msg("MySQL connected successfully!")
-			return
+			return dbHandle, nil
 		}
 		cancel()
 		log.Printf("MySQL not ready, retry %d/10...\n", i+1)
@@ -63,10 +57,11 @@ func InitMySQL() {
 	}
 
 	log.Warn().Msg("Could not connect to MySQL after retries")
+	return nil, fmt.Errorf("Could not connect to MySQL")
 }
 
-func Close() {
-	if DB != nil {
-		DB.Close()
+func Close(dbHandle *sql.DB) {
+	if dbHandle != nil {
+		dbHandle.Close()
 	}
 }
