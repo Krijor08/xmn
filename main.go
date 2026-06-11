@@ -20,16 +20,21 @@ func init() {
 	}
 }
 
+var sql bool
+
 func main() {
-	db := database.InitMySQL()
+	db, err := database.InitMySQL()
+	if err == nil {
+		sql = true
+	} else {
+		sql = false
+	}
 	defer db.Close()
 
 	r := mux.NewRouter()
 	handle := middleware.NewHandler(db)
 
 	r.HandleFunc("/about", handle.About).Methods("GET")
-	r.HandleFunc("/login", handle.LoginPage).Methods("GET")
-	r.HandleFunc("/signup", handle.SignupPage).Methods("GET")
 
 	r.HandleFunc("/", handle.Home).Methods("GET")
 
@@ -37,7 +42,11 @@ func main() {
 		http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
 	)
 
-	r.HandleFunc("/api/login", handle.Login).Methods("POST")
+	if sql == true {
+		r.HandleFunc("/login", handle.LoginPage).Methods("GET")
+		r.HandleFunc("/signup", handle.SignupPage).Methods("GET")
+		r.HandleFunc("/api/login", handle.Login).Methods("POST")
+	}
 
 	address := os.Getenv("ADDRESS")
 

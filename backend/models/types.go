@@ -1,5 +1,9 @@
 package models
 
+import (
+	"github.com/golang-jwt/jwt/v5"
+)
+
 type ApiResponse struct {
 	Data    any            `json:"data,omitempty"`
 	Error   *ErrorResponse `json:"error,omitempty"`
@@ -13,12 +17,21 @@ type ErrorResponse struct {
 	Details map[string]any `json:"details,omitempty"`
 }
 
-type User struct {
+type HomeUser struct {
 	ID    int
 	Name  string
 	Role  string
 	Email string
 	Phone string
+}
+
+type User struct {
+	ID       int
+	Name     string
+	Role     string
+	Email    string
+	Phone    string
+	Password string
 }
 
 type Role struct {
@@ -43,13 +56,20 @@ type SignupRequest struct {
 	Role_ID  int    `json:"role_id"`
 }
 
+type Claims struct {
+	UserID int    `json:user_id`
+	Email  string `json:email`
+	jwt.RegisteredClaims
+}
+
 type BasePage struct {
-	CurrentPage string
+	CurrentPage     string
+	IsAuthenticated bool
 }
 
 type HomeData struct {
 	BasePage
-	User User
+	User HomeUser
 }
 
 type AboutData struct {

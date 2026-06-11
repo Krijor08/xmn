@@ -17,3 +17,18 @@ CREATE  TABLE users (
     FOREIGN KEY (role_ID) REFERENCES roles(ID)
 ) AUTO_INCREMENT = 1000;
 
+CREATE OR REPLACE VIEW user_view AS
+SELECT 
+	u.ID,
+    u.created_time AS user_created,
+    u.updated_time AS user_updated,
+    r.created_time AS role_created,
+    r.updated_time AS role_updated,
+    u.username,
+    u.password,
+    u.email,
+    u.phone,
+    r.role
+FROM users AS u
+JOIN roles AS r ON
+	u.role_ID = r.ID;

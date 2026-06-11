@@ -12,8 +12,7 @@ import (
 )
 
 var tmpl = make(map[string]*template.Template)
-
-var isAuthenticated bool = false
+var isAuthenticated bool
 
 type Handler struct {
 	db *sql.DB
@@ -24,15 +23,15 @@ func NewHandler(db *sql.DB) *Handler {
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
-	if !isAuthenticated {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-	}
+	// if !isAuthenticated {
+	// 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	// }
 
 	tmpl["home.html"] = template.Must(template.ParseFiles("templates/base.html", "templates/home.html"))
 
 	data := models.HomeData{
-		BasePage: models.BasePage{CurrentPage: "home"},
-		User:     models.User{ID: 1, Name: "Username", Role: "placeholder", Email: "placeholder@example.com"},
+		BasePage: models.BasePage{CurrentPage: "home" /*, IsAuthenticated: isAuthenticated*/},
+		User:     models.HomeUser{ID: 1, Name: "Username", Role: "placeholder", Email: "placeholder@example.com"},
 	}
 
 	err := tmpl["home.html"].Execute(w, data)
@@ -78,8 +77,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Received login attempt for username: %s\n", loginReq.Username)
 
-	var err error
-	isAuthenticated, err = database.AuthenticateUser(loginReq.Username, loginReq.Password, h.db)
+	User, err := database.AuthenticateUser(loginReq.Username, loginReq.Password, h.db)
 
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -87,9 +85,10 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isAuthenticated {
+	if User.Name == "" {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		http.Error(w, fmt.Sprintf("User %s authenticated successfully!", loginReq.Username), http.StatusOK)
+		token, err := generateToken(User.ID, User.Email)
 	} else {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		http.Error(w, fmt.Sprintf("Authentication failed for user %s", loginReq.Username), http.StatusUnauthorized)
@@ -109,8 +108,8 @@ func (h *Handler) SignupPage(w http.ResponseWriter, r *http.Request) {
 	signupReq := models.SignupRequest{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
-		Role_ID:  role_id,
 		Email:    r.FormValue("email"),
+		Role_ID:  role_id,
 		Phone:    phone,
 	}
 

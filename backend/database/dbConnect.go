@@ -21,7 +21,7 @@ func getDSN() string {
 	)
 }
 
-func InitMySQL() *sql.DB {
+func InitMySQL() (*sql.DB, error) {
 	dsn := getDSN()
 
 	fmt.Printf("Attempting MySQL connection with DSN: %s\n", dsn)
@@ -29,12 +29,12 @@ func InitMySQL() *sql.DB {
 	dbHandle, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Warn().Msg("Failed to open MySQL connection: " + err.Error())
-		return nil
+		return nil, err
 	}
 
 	if err := dbHandle.Ping(); err != nil {
 		log.Warn().Msg("Can't reach MySQL: " + err.Error())
-		return nil
+		return nil, err
 	}
 
 	dbHandle.SetMaxOpenConns(25)
@@ -48,7 +48,7 @@ func InitMySQL() *sql.DB {
 		if err = dbHandle.PingContext(ctx); err == nil {
 			cancel()
 			log.Info().Msg("MySQL connected successfully!")
-			return dbHandle
+			return dbHandle, nil
 		}
 		cancel()
 		log.Printf("MySQL not ready, retry %d/10...\n", i+1)
@@ -57,7 +57,7 @@ func InitMySQL() *sql.DB {
 	}
 
 	log.Warn().Msg("Could not connect to MySQL after retries")
-	return nil
+	return nil, fmt.Errorf("Could not connect to MySQL")
 }
 
 func Close(dbHandle *sql.DB) {
