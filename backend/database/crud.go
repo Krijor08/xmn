@@ -50,10 +50,17 @@ func AuthenticateUser(username string, password string, db *sql.DB) (models.User
 func CreateUser(SignupReq models.SignupRequest, db *sql.DB) (sql.Result, error) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(SignupReq.Password), bcrypt.DefaultCost)
-
-	result, err := db.Exec(
-		"INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?);",
-		SignupReq.Username, hashedPassword, SignupReq.Email, SignupReq.Phone,
-	)
+	var result sql.Result
+	if SignupReq.Phone != 0 {
+		result, err = db.Exec(
+			"INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?);",
+			SignupReq.Username, hashedPassword, SignupReq.Email, SignupReq.Phone,
+		)
+	} else {
+		result, err = db.Exec(
+			"INSERT INTO users (username, password, email) VALUES (?, ?, ?);",
+			SignupReq.Username, hashedPassword, SignupReq.Email,
+		)
+	}
 	return result, err
 }

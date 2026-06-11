@@ -125,7 +125,7 @@ func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
 
 	phone, err := strconv.Atoi(r.FormValue("phone"))
 	if err != nil {
-		http.Error(w, fmt.Sprintf("%v is not a valid phone number", r.FormValue("phone")), http.StatusBadRequest)
+		phone = 0
 	}
 
 	signupReq := models.SignupRequest{
@@ -138,10 +138,22 @@ func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
 	result, err := database.CreateUser(signupReq, h.db)
 	if err != nil {
 		log.Warn().Msg(fmt.Sprintf("Could not insert data: %s", err))
+		http.Redirect(w, r, "/signup", http.StatusSeeOther)
+		http.Error(w, fmt.Sprintf("Could not create user named %s", signupReq.Username), http.StatusUnauthorized)
+		return
 	}
-	lastId, err := result.LastInsertId()
-	rows, err := result.RowsAffected()
-	log.Debug().Msg(fmt.Sprintf("%v, %v", lastId, rows))
+
+	rows, _ := result.RowsAffected()
+
+	if rows == 1 {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Error(w, fmt.Sprintf("User %s created successfully!", signupReq.Username), http.StatusOK)
+		isAuthenticated = true
+	} else {
+		log.Warn().Msg(fmt.Sprintf("Could not insert data: %s", err))
+		http.Redirect(w, r, "/signup", http.StatusSeeOther)
+		http.Error(w, fmt.Sprintf("Could not create user named %s", signupReq.Username), http.StatusUnauthorized)
+	}
 }
 
 func (h *Handler) NoSQL(w http.ResponseWriter, r *http.Request) {
